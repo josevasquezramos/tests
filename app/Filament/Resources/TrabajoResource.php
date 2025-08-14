@@ -125,6 +125,7 @@ class TrabajoResource extends Resource
                     ->sortable(),
                 Tables\Columns\ViewColumn::make('documentos_badges')
                     ->label('Documentos')
+                    ->disableClick()
                     ->view('filament.tables.columns.documentos-badges')
                     ->state(function ($record) {
                         return $record->documentos->map(function ($d) {
