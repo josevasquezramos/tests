@@ -6,18 +6,20 @@ use App\Filament\Resources\TrabajoResource\Pages;
 use App\Models\Documento;
 use App\Models\Trabajo;
 use Filament\Forms;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\DB;
-use Storage;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TrabajoResource extends Resource
 {
@@ -29,54 +31,48 @@ class TrabajoResource extends Resource
     {
         return $form
             ->schema([
-                
-                Forms\Components\TextInput::make('importe')
+                TextInput::make('importe')
                     ->required()
                     ->numeric(),
-                
-                Forms\Components\Repeater::make('documentos')
-                    ->relationship('documentos')
+
+                // Repeater manual (sin ->relationship())
+                Repeater::make('documentos')
+                    ->label('Documentos')
                     ->schema([
-                        Forms\Components\Select::make('id')
+                        Select::make('documento_id')
                             ->label('Documento')
-                            ->options(Documento::query()->pluck('nombre', 'id'))
+                            ->options(fn() => Documento::query()->pluck('nombre', 'id'))
                             ->searchable()
                             ->required()
+                            ->distinct()
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                             ->createOptionForm([
-                                Forms\Components\TextInput::make('nombre')
+                                TextInput::make('nombre')
                                     ->required(),
-                                Forms\Components\TextInput::make('importe')
+                                TextInput::make('importe')
                                     ->required()
                                     ->numeric(),
-                                Forms\Components\FileUpload::make('url')
+                                FileUpload::make('url')
                                     ->required()
                                     ->directory('documentos'),
                             ])
                             ->createOptionUsing(function (array $data) {
-                                try {
-                                    DB::beginTransaction();
-                                    
+                                return DB::transaction(function () use ($data) {
                                     $documento = Documento::create([
                                         'nombre' => $data['nombre'],
                                         'importe' => $data['importe'],
                                         'url' => $data['url'],
                                     ]);
-                                    
-                                    DB::commit();
-                                    
                                     return $documento->id;
-                                } catch (\Exception $e) {
-                                    DB::rollBack();
-                                    throw $e;
-                                }
+                                });
                             })
                             ->editOptionForm([
-                                Forms\Components\TextInput::make('nombre')
+                                TextInput::make('nombre')
                                     ->required(),
-                                Forms\Components\TextInput::make('importe')
+                                TextInput::make('importe')
                                     ->required()
                                     ->numeric(),
-                                Forms\Components\FileUpload::make('url')
+                                FileUpload::make('url')
                                     ->directory('documentos'),
                             ])
                             ->fillEditOptionActionFormUsing(function (string $state) {
@@ -87,29 +83,34 @@ class TrabajoResource extends Resource
                                 return [];
                             })
                             ->updateOptionUsing(function (array $data, string $state) {
-                                try {
-                                    DB::beginTransaction();
-                                    
-                                    $documento = Documento::find($state);
+                                DB::transaction(function () use ($data, $state) {
+                                    $documento = Documento::findOrFail($state);
                                     $documento->update([
                                         'nombre' => $data['nombre'],
                                         'importe' => $data['importe'],
                                         'url' => $data['url'] ?? $documento->url,
                                     ]);
-                                    
-                                    DB::commit();
-                                } catch (\Exception $e) {
-                                    DB::rollBack();
-                                    throw $e;
-                                }
-                            })
-                            ->distinct()
-                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                                });
+                            }),
                     ])
-                    ->defaultItems(1)
+                    ->defaultItems(0)
+                    ->minItems(0)
+                    ->reorderable(false)
                     ->columnSpanFull()
                     ->addActionLabel('Agregar Documento')
-                    ->reorderable(false),
+                    // Al editar un Trabajo, precargar los documentos ya asociados.
+                    ->afterStateHydrated(function (Set $set, ?Trabajo $record) {
+                        if (!$record || !$record->exists) {
+                            return;
+                        }
+                        $items = $record->documentos()
+                            ->pluck('documentos.id')
+                            ->map(fn($id) => ['documento_id' => $id])
+                            ->values()
+                            ->toArray();
+
+                        $set('documentos', $items);
+                    }),
             ]);
     }
 
@@ -122,15 +123,28 @@ class TrabajoResource extends Resource
                 TextColumn::make('importe')
                     ->money()
                     ->sortable(),
-                Tables\Columns\ViewColumn::make('documentos')
+                Tables\Columns\ViewColumn::make('documentos_badges')
                     ->label('Documentos')
-                    ->view('filament.tables.columns.documentos-badges'),
+                    ->view('filament.tables.columns.documentos-badges')
+                    ->state(function ($record) {
+                        return $record->documentos->map(function ($d) {
+                            $path = $d->url;
+                            $href = $path
+                                ? (Str::startsWith($path, ['http://', 'https://', '/'])
+                                    ? $path
+                                    : Storage::disk('public')->url($path))
+                                : null;
+
+                            return [
+                                'id' => $d->id,
+                                'nombre' => $d->nombre,
+                                'url' => $href,
+                            ];
+                        })->values()->all();
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -142,6 +156,12 @@ class TrabajoResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['documentos:id,nombre,url']);
     }
 
     public static function getRelations(): array
