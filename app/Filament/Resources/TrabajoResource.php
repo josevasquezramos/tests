@@ -25,6 +25,8 @@ class TrabajoResource extends Resource
 {
     protected static ?string $model = Trabajo::class;
 
+    protected static ?string $navigationGroup = 'Pruebas de administración';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

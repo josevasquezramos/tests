@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\DocumentoResource\Pages;
-use App\Filament\Resources\DocumentoResource\RelationManagers;
-use App\Models\Documento;
+use App\Filament\Resources\ArticuloUnidadResource\Pages;
+use App\Filament\Resources\ArticuloUnidadResource\RelationManagers;
+use App\Models\ArticuloUnidad;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,25 +13,31 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class DocumentoResource extends Resource
+class ArticuloUnidadResource extends Resource
 {
-    protected static ?string $model = Documento::class;
+    protected static ?string $model = ArticuloUnidad::class;
 
-    protected static ?string $navigationGroup = 'Pruebas de administración';
+    protected static ?string $navigationGroup = 'Pruebas de logística';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-scale';
+
+    protected static ?string $modelLabel = 'Unidad de medida';
+
+    protected static ?string $pluralModelLabel = 'Unidades de medida';
+
+    protected static ?string $navigationLabel = 'Unidades de medida';
+
+    protected static ?string $slug = 'articulo-unidades';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('importe')
+                Forms\Components\TextInput::make('abreviatura')
                     ->required()
-                    ->numeric(),
+                    ->maxLength(10),
                 Forms\Components\TextInput::make('nombre')
                     ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('url')
                     ->maxLength(255),
             ]);
     }
@@ -40,12 +46,9 @@ class DocumentoResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('importe')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('nombre')
+                Tables\Columns\TextColumn::make('abreviatura')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('url')
+                Tables\Columns\TextColumn::make('nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -56,11 +59,13 @@ class DocumentoResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -69,19 +74,10 @@ class DocumentoResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDocumentos::route('/'),
-            'create' => Pages\CreateDocumento::route('/create'),
-            'edit' => Pages\EditDocumento::route('/{record}/edit'),
+            'index' => Pages\ManageArticuloUnidads::route('/'),
         ];
     }
 }
