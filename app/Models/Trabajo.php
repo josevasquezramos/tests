@@ -18,7 +18,7 @@ class Trabajo extends Model
 
     public function documentos(): BelongsToMany
     {
-        return $this->belongsToMany(Documento::class, 'trabajo_documentos')
+        return $this->belongsToMany(Documento::class, 'trabajo_documentos', 'trabajo_id', 'comprobante_id')
             ->withTimestamps();
     }
 }

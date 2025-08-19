@@ -135,5 +135,49 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        DB::table('users')->insert([
+            'name' => 'Jauregui',
+            'email' => 'jauregui@guzcar.com',
+            'password' => Hash::make('123456789'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('users')->insert([
+            'name' => 'Jose Peña',
+            'email' => 'jose@guzcar.com',
+            'password' => Hash::make('123456789'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('users')->insert([
+            'name' => 'Moises',
+            'email' => 'moises@guzcar.com',
+            'password' => Hash::make('123456789'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('users')->insert([
+            'name' => 'Yahir Alcantara',
+            'email' => 'yahir@guzcar.com',
+            'password' => Hash::make('123456789'),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'LLAVE MIXTA 8 CHROME B',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'DADOS 1/2 STANLEY',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
     }
 }
