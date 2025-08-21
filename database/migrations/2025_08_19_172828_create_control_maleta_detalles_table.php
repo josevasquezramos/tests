@@ -15,7 +15,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('control_maleta_id');
             $table->unsignedBigInteger('maleta_detalle_id');
             $table->unsignedBigInteger('herramienta_id');
-            $table->enum('estado', ['OPERATIVO', 'MERMA', 'PERDIDO'])->nullable();
+            $table->enum('estado', ['OPERATIVO', 'MERMA', 'PERDIDO'])->default('OPERATIVO');
+            $table->text('observacion')->nullable();
             $table->enum('prev_estado', ['OPERATIVO', 'MERMA', 'PERDIDO'])->nullable();
             $table->dateTime('prev_deleted_at')->nullable();
 

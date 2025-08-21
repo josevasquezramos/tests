@@ -16,6 +16,7 @@ class ControlMaletaDetalle extends Model
         'maleta_detalle_id',
         'herramienta_id',
         'estado',
+        'observacion',
         'prev_estado',
         'prev_deleted_at',
     ];

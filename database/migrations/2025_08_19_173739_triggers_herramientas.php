@@ -725,11 +725,9 @@ CREATE TRIGGER trg_md_bu_toggle_activo
 BEFORE UPDATE ON maleta_detalles
 FOR EACH ROW
 BEGIN
-  -- Activa SOLO si NO se cambia el estado de negocio y éste es OPERATIVO
   IF OLD.ultimo_estado = 'OPERATIVO'
      AND (NEW.ultimo_estado <=> OLD.ultimo_estado) THEN
 
-    -- Desasignar (sale de la maleta sin incidencia)
     IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
       UPDATE herramientas
          SET asignadas = asignadas - 1,
@@ -740,7 +738,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Asignadas insuficientes para desasignar';
       END IF;
 
-    -- Re-asignar (vuelve a la maleta sin incidencia)
     ELSEIF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
       UPDATE herramientas
          SET stock     = stock - 1,

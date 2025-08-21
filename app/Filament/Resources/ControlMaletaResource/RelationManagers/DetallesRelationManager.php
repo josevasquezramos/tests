@@ -8,6 +8,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -32,11 +33,14 @@ class DetallesRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('herramienta.nombre'),
                 SelectColumn::make('estado')
+                    ->selectablePlaceholder(false)
                     ->options([
                         'OPERATIVO' => 'Operativa',
                         'MERMA' => 'Merma',
                         'PERDIDO' => 'Perdida',
-                    ])
+                    ]),
+                TextInputColumn::make('observacion')
+                    ->placeholder('Sin observaciones'),
             ])
             ->filters([
                 //

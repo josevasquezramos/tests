@@ -169,13 +169,55 @@ class DatabaseSeeder extends Seeder
         ]);
 
         DB::table('herramientas')->insert([
-            'nombre' => 'LLAVE MIXTA 8 CHROME B',
+            'nombre' => 'LLAVE MIXTA CHROME B 6',
             'costo' => 50,
             'stock' => 10,
         ]);
 
         DB::table('herramientas')->insert([
-            'nombre' => 'DADOS 1/2 STANLEY',
+            'nombre' => 'LLAVE MIXTA CHROME B 7',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'LLAVE MIXTA CHROME B 8',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'SUPLETE DE 1/4 CHICO',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'SUPLETE DE 1/4 MEDIANO',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'SUPLETE DE 1/4 GRANDE',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'SUPLETE DE 1/2 CHICO',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'SUPLETE DE 1/2 MEDIANO',
+            'costo' => 50,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'SUPLETE DE 1/2 GRANDE',
             'costo' => 50,
             'stock' => 10,
         ]);
