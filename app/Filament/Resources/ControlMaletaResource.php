@@ -105,6 +105,11 @@ class ControlMaletaResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\Action::make('asignacionPdf')
+                    ->label('Hoja de asignación')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn($record) => route('pdf.control_maleta.asignacion', $record))
+                    ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

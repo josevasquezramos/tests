@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Pdf\ControlMaletaAsignacionPdfController;
 use App\Http\Controllers\Pdf\MaletaPdfController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +15,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', fn () => view('welcome'));
+Route::get('/', fn() => view('welcome'));
 
 Route::get('/pdf/maletas/{maleta}', [MaletaPdfController::class, 'show'])
     ->name('pdf.maleta');
+
+Route::get('/pdf/control-maletas/{control}', [ControlMaletaAsignacionPdfController::class, 'show'])
+    ->name('pdf.control_maleta.asignacion');

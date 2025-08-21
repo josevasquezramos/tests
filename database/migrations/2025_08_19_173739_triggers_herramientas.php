@@ -121,7 +121,7 @@ FOR EACH ROW
 BEGIN
   INSERT INTO control_maleta_detalles
     (control_maleta_id, maleta_detalle_id, herramienta_id, estado, prev_estado, prev_deleted_at)
-  SELECT NEW.id, md.id, md.herramienta_id, NULL, md.ultimo_estado, md.deleted_at
+  SELECT NEW.id, md.id, md.herramienta_id, 'OPERATIVO', md.ultimo_estado, md.deleted_at
     FROM maleta_detalles md
    WHERE md.maleta_id = NEW.maleta_id
      AND md.deleted_at IS NULL;

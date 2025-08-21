@@ -13,7 +13,12 @@ class EditControlMaleta extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\Action::make('asignacionPdf')
+                    ->label('Hoja de asignación')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn($record) => route('pdf.control_maleta.asignacion', $record))
+                    ->openUrlInNewTab(),
+            // Actions\DeleteAction::make(),
         ];
     }
 
