@@ -718,6 +718,39 @@ BEGIN
 END
 
         ");
+
+        DB::unprepared("
+
+CREATE TRIGGER trg_md_bu_toggle_activo
+BEFORE UPDATE ON maleta_detalles
+FOR EACH ROW
+BEGIN
+  IF OLD.ultimo_estado = 'OPERATIVO' THEN
+    IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
+      UPDATE herramientas
+         SET asignadas = asignadas - 1,
+             stock     = stock + 1
+       WHERE id = OLD.herramienta_id
+         AND asignadas >= 1;
+      IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Asignadas insuficientes para desasignar';
+      END IF;
+    END IF;
+
+    IF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
+      UPDATE herramientas
+         SET stock     = stock - 1,
+             asignadas = asignadas + 1
+       WHERE id = OLD.herramienta_id
+         AND stock >= 1;
+      IF ROW_COUNT() = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock insuficiente para re-asignar';
+      END IF;
+    END IF;
+  END IF;
+END
+
+        ");
     }
 
     /**

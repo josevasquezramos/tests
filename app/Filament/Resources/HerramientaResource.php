@@ -29,8 +29,10 @@ class HerramientaResource extends Resource
         return $form
             ->schema([
                 TextInput::make('nombre')
-                    ->required(),
+                    ->required()
+                    ->columnSpanFull(),
                 TextInput::make('costo')
+                    ->default(0)
                     ->required()
                     ->prefix('S/')
                     ->numeric()
@@ -44,17 +46,20 @@ class HerramientaResource extends Resource
                     ->required()
                     ->default(0)
                     ->numeric()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->hiddenOn('create'),
                 TextInput::make('mermas')
                     ->required()
                     ->default(0)
                     ->numeric()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->hiddenOn('create'),
                 TextInput::make('perdidas')
                     ->required()
                     ->default(0)
                     ->numeric()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->hiddenOn('create'),
             ]);
     }
 
