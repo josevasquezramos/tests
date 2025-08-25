@@ -69,6 +69,12 @@ class DetallesRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('ultimo_estado')
                     ->searchable(isIndividual: true)
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'OPERATIVO' => 'success',
+                        'MERMA' => 'warning',
+                        'PERDIDO' => 'danger',
+                    })
                     ->sortable(),
             ])
             ->filters([

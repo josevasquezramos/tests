@@ -22,7 +22,9 @@ class HerramientaResource extends Resource
 
     protected static ?string $navigationGroup = 'Pruebas de herramientas';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
+    protected static ?int $navigationSort = 90;
 
     public static function form(Form $form): Form
     {
@@ -81,12 +83,13 @@ class HerramientaResource extends Resource
                         ->numeric()
                         ->sortable(),
                 ]),
-                ColumnGroup::make('Ubicación', [
+                ColumnGroup::make('Stock', [
                     TextColumn::make('stock')
                         ->alignEnd()
-                        ->label('Almacén')
+                        ->label('En almacén')
                         ->sortable(),
                     TextColumn::make('asignadas')
+                        ->label('En maletas')
                         ->alignEnd()
                         ->sortable(),
                 ]),

@@ -23,7 +23,7 @@ class MaletaResource extends Resource
 
     protected static ?string $navigationGroup = 'Pruebas de herramientas';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
     public static function form(Form $form): Form
     {
@@ -33,7 +33,6 @@ class MaletaResource extends Resource
                     ->required()
                     ->unique(ignoreRecord: true),
                 Select::make('propietario_id')
-                    ->required()
                     ->relationship('propietario', 'name')
                     ->searchable()
                     ->preload()
@@ -49,7 +48,8 @@ class MaletaResource extends Resource
                     ->searchable(isIndividual: true),
                 TextColumn::make('propietario.name')
                     ->sortable()
-                    ->searchable(isIndividual: true),
+                    ->searchable(isIndividual: true)
+                    ->placeholder('Sin asignar'),
                 TextColumn::make('detalles_count')
                     ->label('Herramientas')
                     ->counts('detalles')

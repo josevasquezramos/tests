@@ -90,7 +90,7 @@
                 </td>
                 <td class="sign-cell">
                     <div class="sign-line"></div>
-                    <div class="sign-name">DANIEL GAY</div>
+                    <div class="sign-name">PRUEBA</div>
                     <div class="sign-role">Supervisor</div>
                 </td>
             </tr>

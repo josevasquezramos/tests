@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('maletas', function (Blueprint $table) {
             $table->id();
             $table->string('codigo')->unique();
-            $table->unsignedBigInteger('propietario_id');
+            $table->unsignedBigInteger('propietario_id')->nullable();
             $table->unique('codigo', 'uk_maletas_codigo');
             $table->foreign('propietario_id')
                 ->references('id')->on('users')

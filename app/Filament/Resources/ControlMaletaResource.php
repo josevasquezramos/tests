@@ -13,6 +13,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -28,7 +29,7 @@ class ControlMaletaResource extends Resource
 
     protected static ?string $navigationGroup = 'Pruebas de herramientas';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 
     public static function form(Form $form): Form
     {
@@ -58,11 +59,22 @@ class ControlMaletaResource extends Resource
                     ->afterStateUpdated(function (?int $state, Set $set) {
                         if ($state) {
                             $maleta = Maleta::with('propietario')->find($state);
-                            $set('propietario_id', $maleta?->propietario_id);
-                            $set('propietario_nombre', $maleta?->propietario?->name);
+                            $propietarioId = $maleta?->propietario_id;
+                            $propietarioNombre = $maleta?->propietario?->name ?? 'No asignado';
+
+                            $set('propietario_id', $propietarioId);
+                            $set('propietario_nombre', $propietarioNombre);
+
+                            // Deshabilitar el campo si no hay propietario
+                            if (!$propietarioId) {
+                                $set('propietario_disabled', true);
+                            } else {
+                                $set('propietario_disabled', false);
+                            }
                         } else {
                             $set('propietario_id', null);
                             $set('propietario_nombre', null);
+                            $set('propietario_disabled', false);
                         }
                     }),
                 TextInput::make('maleta_codigo')
@@ -72,8 +84,24 @@ class ControlMaletaResource extends Resource
                 TextInput::make('propietario_nombre')
                     ->label('Propietario')
                     ->readOnly()
-                    ->dehydrated(false),
+                    ->dehydrated(false)
+                    ->default('No asignado')
+                    ->disabled(fn(Get $get) => $get('propietario_disabled'))
+                    ->afterStateHydrated(function (TextInput $component, $state, $record) {
+                        // Cuando se carga el registro en edición, establecer el estado correcto
+                        if ($record && !$record->propietario_id) {
+                            $component->state('No asignado');
+                        }
+                    }),
                 Hidden::make('propietario_id'),
+                Hidden::make('propietario_disabled')
+                    ->default(false)
+                    ->afterStateHydrated(function (Set $set, $state, $record) {
+                        // Cuando se carga el registro en edición, establecer el estado disabled
+                        if ($record && !$record->propietario_id) {
+                            $set('propietario_disabled', true);
+                        }
+                    }),
             ]);
     }
 
@@ -99,7 +127,8 @@ class ControlMaletaResource extends Resource
                 TextColumn::make('propietario.name')
                     ->label('Propietario')
                     ->sortable()
-                    ->searchable(isIndividual: true),
+                    ->searchable(isIndividual: true)
+                    ->placeholder('No asignado'),
             ])
             ->filters([
                 //

@@ -102,12 +102,11 @@ BEGIN
   IF NEW.propietario_id IS NULL THEN
     SELECT propietario_id INTO v_prop
       FROM maletas
-     WHERE id = NEW.maleta_id
-     LIMIT 1;
-    IF v_prop IS NULL THEN
-      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Maleta inválida o sin propietario';
+      WHERE id = NEW.maleta_id
+      LIMIT 1;
+    IF v_prop IS NOT NULL THEN
+      SET NEW.propietario_id = v_prop;
     END IF;
-    SET NEW.propietario_id = v_prop;
   END IF;
 END
 
