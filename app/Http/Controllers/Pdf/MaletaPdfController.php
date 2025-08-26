@@ -10,20 +10,12 @@ class MaletaPdfController extends Controller
 {
     public function show(Maleta $maleta)
     {
-        // Cargar relaciones necesarias
         $maleta->load(['propietario', 'detalles.herramienta']);
 
-        $normalizeSpaces = fn (string $s) => trim(preg_replace('/\s+/u', ' ', $s));
-        $trimPunctuation = fn (string $s) => trim($s, " \t\n\r\0\x0B.:,;");
+        $normalizeSpaces = fn(string $s) => trim(preg_replace('/\s+/u', ' ', $s));
+        $trimPunctuation = fn(string $s) => trim($s, " \t\n\r\0\x0B.:,;");
 
-        /**
-         * Divide en: BASE (prefijo común) + SUFIJO (resto).
-         * Regla práctica:
-         *  - SUFIJO es normalmente el último token.
-         *  - Si hay patrón número+unidad separados (ej. "10 mm"), se toma ambos como un único sufijo.
-         *  - Si viene junto (ej. "10mm"), también se considera un solo sufijo.
-         *  - Fracciones tipo "1/2" se tratan como sufijo numérico.
-         */
+        // Función mejorada para dividir base y sufijo
         $splitBaseSuffix = function (string $name) use ($normalizeSpaces, $trimPunctuation): array {
             $name = $trimPunctuation($normalizeSpaces($name));
             if ($name === '') {
@@ -32,83 +24,59 @@ class MaletaPdfController extends Controller
 
             $tokens = explode(' ', $name);
             $n = count($tokens);
+
             if ($n === 1) {
-                // No hay sufijo claro
                 return ['base' => $tokens[0], 'suffix' => null];
             }
 
-            $last = $trimPunctuation(end($tokens));
-            $beforeLast = $n >= 2 ? $trimPunctuation($tokens[$n - 2]) : '';
-
-            // Caso 1: número + unidad separados: "10 mm"
-            if (
-                preg_match('/^\d+(?:[.,]\d+)?$/u', $beforeLast) &&
-                preg_match('/^[A-Za-z]{1,12}$/u', $last)
-            ) {
-                $baseTokens = array_slice($tokens, 0, $n - 2);
-                $suffix = $beforeLast . ' ' . $last;
+            // Detección de herramientas conocidas con reglas específicas
+            $firstToken = mb_strtoupper($tokens[0]);
+            $secondToken = $n > 1 ? mb_strtoupper($tokens[1]) : '';
+            
+            // Reglas para herramientas específicas
+            if ($firstToken === 'ALICATE') {
+                return ['base' => 'ALICATE', 'suffix' => implode(' ', array_slice($tokens, 1))];
             }
-            // Caso 2: número+unidad pegados: "10mm"
-            elseif (preg_match('/^(\d+(?:[.,]\d+)?)([A-Za-z]{1,12})$/u', $last, $m)) {
-                $baseTokens = array_slice($tokens, 0, $n - 1);
-                $suffix = $m[1] . $m[2];
+            
+            if ($firstToken === 'DESARMADOR' && $secondToken === 'DIELÉCTRICO') {
+                return ['base' => 'DESARMADOR DIELÉCTRICO', 'suffix' => implode(' ', array_slice($tokens, 2))];
             }
-            // Caso 3: fracción como "1/2"
-            elseif (preg_match('/^\d+\s*\/\s*\d+$/u', $last)) {
-                $baseTokens = array_slice($tokens, 0, $n - 1);
-                $suffix = preg_replace('/\s*/', '', $last); // "1/2"
+            
+            if ($firstToken === 'LLAVE' && $n >= 4 && mb_strtoupper($tokens[$n-2]) === 'B') {
+                return ['base' => implode(' ', array_slice($tokens, 0, $n-1)), 'suffix' => $tokens[$n-1]];
             }
-            // Por defecto: último token como sufijo
-            else {
-                $baseTokens = array_slice($tokens, 0, $n - 1);
-                $suffix = $last;
+            
+            if ($firstToken === 'SUPLETE' && $secondToken === 'DE') {
+                $measure = $n > 2 ? $tokens[2] : '';
+                return ['base' => "SUPLETE DE $measure", 'suffix' => implode(' ', array_slice($tokens, 3))];
             }
 
-            $base = $normalizeSpaces(implode(' ', $baseTokens));
-            if ($base === '') {
-                // Si por algún motivo la base queda vacía, usa el nombre original sin sufijo
-                $base = $name;
-                $suffix = null;
+            // Algoritmo general para otras herramientas
+            // Encuentra el prefijo común más largo que termina en una palabra completa
+            $lastToken = $tokens[$n-1];
+            
+            // Si el último token es numérico o una medida, se considera sufijo
+            if (preg_match('/^\d+(?:[.,]\d+)?$|^\d+\/\d+$|^(CHICO|MEDIANO|GRANDE|PEQUEÑO|EXTRA|STANDARD)$/iu', $lastToken)) {
+                return [
+                    'base' => implode(' ', array_slice($tokens, 0, $n-1)),
+                    'suffix' => $lastToken
+                ];
+            }
+            
+            // Si el penúltimo token es numérico y el último es una unidad
+            if ($n >= 2 && preg_match('/^\d+(?:[.,]\d+)?$|^\d+\/\d+$/u', $tokens[$n-2]) && 
+                preg_match('/^[A-Za-z]{1,12}$/u', $lastToken)) {
+                return [
+                    'base' => implode(' ', array_slice($tokens, 0, $n-2)),
+                    'suffix' => $tokens[$n-2] . ' ' . $lastToken
+                ];
             }
 
-            return ['base' => $base, 'suffix' => $suffix];
-        };
-
-        // Parser para ordenar "sufijos numéricos" primero y luego alfabéticos
-        $parseNumericish = function (string $s): ?array {
-            $u = trim($s);
-
-            // Fracción "a/b"
-            if (preg_match('/^\d+\s*\/\s*\d+$/u', $u)) {
-                [$a, $b] = array_map('trim', preg_split('/\//', $u));
-                $val = ((float) $a) / max(((float) $b), 1e-9);
-                return ['type' => 'num', 'val' => $val, 'unit' => ''];
-            }
-
-            // número (con , o .) + unidad opcional (con o sin espacio)
-            if (preg_match('/^(\d+(?:[.,]\d+)?)(?:\s*([A-Za-z]{0,12}))?$/u', $u, $m)) {
-                $val = (float) str_replace(',', '.', $m[1]);
-                $unit = strtoupper($m[2] ?? '');
-                return ['type' => 'num', 'val' => $val, 'unit' => $unit];
-            }
-
-            return null; // no numérico
-        };
-
-        $suffixComparator = function (string $a, string $b) use ($parseNumericish): int {
-            $pa = $parseNumericish($a);
-            $pb = $parseNumericish($b);
-
-            if ($pa && $pb) {
-                if ($pa['val'] < $pb['val']) return -1;
-                if ($pa['val'] > $pb['val']) return 1;
-                return strcasecmp($pa['unit'], $pb['unit']); // desempate por unidad
-            }
-
-            if ($pa && !$pb) return -1; // numéricos primero
-            if (!$pa && $pb) return 1;
-
-            return strcasecmp($a, $b); // ambos no numéricos
+            // Por defecto, tomar el primer token como base y el resto como sufijo
+            return [
+                'base' => $tokens[0],
+                'suffix' => implode(' ', array_slice($tokens, 1))
+            ];
         };
 
         // --- AGRUPACIÓN ---
@@ -120,15 +88,15 @@ class MaletaPdfController extends Controller
 
             $split = $splitBaseSuffix($nombre);
 
-            // Todo en MAYÚSCULAS para mostrar y agrupar
+            // Normalizar a mayúsculas para agrupar
             $baseUpper = mb_strtoupper($split['base']);
-            $suffixUpper = is_null($split['suffix']) ? null : mb_strtoupper($split['suffix']);
+            $suffixUpper = $split['suffix'] ? mb_strtoupper($split['suffix']) : null;
 
             if (!isset($groups[$baseUpper])) {
                 $groups[$baseUpper] = [
                     'base_upper' => $baseUpper,
-                    'count'      => 0,
-                    'suffixes'   => [], // mapa: sufijo => cantidad
+                    'count' => 0,
+                    'suffixes' => [],
                 ];
             }
 
@@ -145,9 +113,9 @@ class MaletaPdfController extends Controller
         // Normalizar a arrays, ordenar sufijos y ordenar grupos por nombre base
         $grupos = [];
         foreach ($groups as $g) {
-            // Ordenar sufijos con el comparador
+            // Ordenar sufijos alfabéticamente
             $suffixList = array_keys($g['suffixes']);
-            usort($suffixList, $suffixComparator);
+            sort($suffixList);
 
             // Preparar lista de visualización con conteos en sufijos repetidos
             $displaySuffixes = array_map(function ($suf) use ($g) {
@@ -157,17 +125,18 @@ class MaletaPdfController extends Controller
 
             $grupos[] = [
                 'base_upper' => $g['base_upper'],
-                'count'      => $g['count'],
-                'suffixes'   => $displaySuffixes, // ya únicos, ordenados y con (n) si aplica
+                'count' => $g['count'],
+                'suffixes' => $displaySuffixes,
             ];
         }
 
-        usort($grupos, fn ($a, $b) => strcmp($a['base_upper'], $b['base_upper']));
+        // Ordenar grupos alfabéticamente
+        usort($grupos, fn($a, $b) => strcmp($a['base_upper'], $b['base_upper']));
 
         // Renderizar el PDF
         $pdf = Pdf::loadView('pdf.maleta', [
-            'maleta'      => $maleta,
-            'grupos'      => $grupos,
+            'maleta' => $maleta,
+            'grupos' => $grupos,
             'generatedAt' => now(),
         ])->setPaper('A4', 'portrait');
 

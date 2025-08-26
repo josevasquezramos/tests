@@ -221,5 +221,55 @@ class DatabaseSeeder extends Seeder
             'costo' => 50,
             'stock' => 10,
         ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'ALICATE DE CORTE',
+            'costo' => 20,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'ALICATE PINZA',
+            'costo' => 20,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'ALICATE NORMAL UNIVERSAL',
+            'costo' => 20,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'DESARMADOR DIELÉCTRICO REVERSIBLE PLANO Y ESTRELLA',
+            'costo' => 20,
+            'stock' => 10,
+        ]);
+
+        DB::table('herramientas')->insert([
+            'nombre' => 'DESARMADOR DIELÉCTRICO ESTRELLA',
+            'costo' => 20,
+            'stock' => 10,
+        ]);
+
+        DB::table('maletas')->insert([
+            'codigo' => 'AG-M2024-MH-001',
+            'propietario_id' => 4,
+        ]);
+
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 1,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 2,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 3,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 4,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 5,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 6,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 7,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 8,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 9,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 10,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 11,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 12,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 13,]);
+        DB::table('maleta_detalles')->insert(['maleta_id' => 1, 'herramienta_id' => 14,]);
     }
 }

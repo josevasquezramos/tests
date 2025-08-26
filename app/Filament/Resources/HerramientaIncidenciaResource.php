@@ -28,7 +28,6 @@ class HerramientaIncidenciaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
     protected static ?string $navigationGroup = 'Pruebas de herramientas';
-
     protected static ?int $navigationSort = 150;
 
     public static function form(Form $form): Form
@@ -47,7 +46,7 @@ class HerramientaIncidenciaResource extends Resource
                 ->readOnly()
                 ->dehydrated(false),
 
-            // Maleta (CREATE: select) ------------------------
+            // --- MALETA (CREATE) ---
             Select::make('maleta_id')
                 ->label('Maleta')
                 ->options(fn() => Maleta::query()
@@ -61,45 +60,57 @@ class HerramientaIncidenciaResource extends Resource
                 ->afterStateUpdated(function ($state, Set $set) {
                     if ($state) {
                         $maleta = Maleta::with('propietario')->find($state);
-                        $set('propietario_id', $maleta?->propietario_id);
-                        $set('propietario_nombre', $maleta?->propietario?->name ?? 'No asignado');
+
+                        // Propietario según maleta elegida
+                        if ($maleta?->propietario_id) {
+                            $set('propietario_id', $maleta->propietario_id);
+                            $set('propietario_nombre', $maleta->propietario?->name);
+                        } else {
+                            $set('propietario_id', null);
+                            $set('propietario_nombre', 'No asignado'); // disabled con texto
+                        }
                     } else {
+                        // Quitaron la selección → sin texto y disabled
                         $set('propietario_id', null);
                         $set('propietario_nombre', null);
                     }
-                    $set('maleta_detalle_id', null); // limpiar herramienta al cambiar maleta
+
+                    // Siempre limpiar herramienta al cambiar/quitar maleta
+                    $set('maleta_detalle_id', null);
                 })
                 ->hiddenOn('edit'),
 
-            // Maleta (EDIT: texto readonly) ------------------
+            // --- MALETA (EDIT) ---
             TextInput::make('maleta_codigo')
                 ->label('Maleta')
                 ->readOnly()
                 ->dehydrated(false)
                 ->visibleOn('edit'),
 
-            // Propietario ------------------------------------
+            // --- PROPIETARIO (UI) ---
             TextInput::make('propietario_nombre')
                 ->label('Propietario')
-                ->readOnly()
+                // readOnly cuando HAY propietario; disabled cuando NO hay
+                ->readOnly(fn(Get $get) => filled($get('propietario_id')))
+                ->disabled(fn(Get $get) => blank($get('propietario_id')))
                 ->dehydrated(false)
-                ->placeholder('No asignado')
-                ->disabled(
-                    fn(Get $get) =>
-                    // sin propietario_id => deshabilitado
-                    !$get('propietario_id')
-                    // o si por UI trae estos textos
-                    || in_array(strtolower((string) $get('propietario_nombre')), ['no asignado', 'sin asignar'])
-                ),
+                ->afterStateHydrated(function (TextInput $component, $state, $record) {
+                    // En edición: si NO hay propietario, mostrar "No asignado" (disabled)
+                    if ($record && blank($record->propietario_id)) {
+                        $component->state('No asignado');
+                    }
+                }),
             Hidden::make('propietario_id'),
 
-            // Herramienta (CREATE: select de maleta_detalles activos) ------------
+            // --- HERRAMIENTA (CREATE) ---
             Select::make('maleta_detalle_id')
                 ->label('Herramienta')
                 ->options(function (Get $get) {
                     $maletaId = $get('maleta_id');
-                    if (!$maletaId)
+                    if (!$maletaId) {
                         return [];
+                    }
+
                     return MaletaDetalle::query()
                         ->with('herramienta')
                         ->where('maleta_id', $maletaId)
@@ -110,23 +121,28 @@ class HerramientaIncidenciaResource extends Resource
                             $md->id => $md->herramienta?->nombre
                                 ? $md->herramienta->nombre
                                 : "Detalle #{$md->id}",
-                        ]);
+                        ])
+                        ->toArray();
                 })
-                ->required()
                 ->reactive()
                 ->searchable()
+                // 🔒 Deshabilitado hasta seleccionar una maleta
+                ->disabled(fn(Get $get) => blank($get('maleta_id')))
+                // ✅ Solo se requiere y se deshidrata cuando hay maleta
+                ->required(fn(Get $get) => filled($get('maleta_id')))
+                ->dehydrated(fn(Get $get) => filled($get('maleta_id')))
                 ->hiddenOn('edit'),
 
-            // Herramienta (EDIT: texto readonly + hidden con el id) --------------
+            // --- HERRAMIENTA (EDIT) ---
             TextInput::make('herramienta_nombre')
                 ->label('Herramienta')
                 ->readOnly()
                 ->dehydrated(false)
                 ->visibleOn('edit'),
             Hidden::make('maleta_detalle_id')
-                ->visibleOn('edit'), // se envía el id real intacto en edición
+                ->visibleOn('edit'),
 
-            // Motivo --------------------------------------------------------------
+            // --- MOTIVO ---
             Select::make('motivo')
                 ->label('Motivo')
                 ->options([
@@ -136,7 +152,7 @@ class HerramientaIncidenciaResource extends Resource
                 ->native(false)
                 ->required(),
 
-            // Observación ---------------------------------------------------------
+            // --- OBSERVACIÓN ---
             Textarea::make('observacion')
                 ->label('Observación')
                 ->rows(3)
@@ -163,7 +179,7 @@ class HerramientaIncidenciaResource extends Resource
                     ->label('Herramienta')
                     ->getStateUsing(function ($record) {
                         $md = $record->maletaDetalle()
-                            ->withTrashed()        // incluir soft-deleted
+                            ->withTrashed()
                             ->with('herramienta')
                             ->first();
 
@@ -182,17 +198,14 @@ class HerramientaIncidenciaResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                // opcional: filtros por motivo, sin propietario, etc.
+                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                // Descomenta si quieres bulk delete:
-                // Tables\Actions\BulkActionGroup::make([
-                //     Tables\Actions\DeleteBulkAction::make(),
-                // ]),
+                //
             ]);
     }
 
@@ -201,7 +214,7 @@ class HerramientaIncidenciaResource extends Resource
         return parent::getEloquentQuery()->with([
             'propietario',
             'responsable',
-            // 👇 Incluye maletaDetalle aunque esté soft-deleted, y su herramienta
+            // incluir maletaDetalle (soft-deleted) y su herramienta
             'maletaDetalle' => fn($q) => $q->withTrashed()->with('herramienta'),
         ]);
     }

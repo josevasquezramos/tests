@@ -59,22 +59,20 @@ class ControlMaletaResource extends Resource
                     ->afterStateUpdated(function (?int $state, Set $set) {
                         if ($state) {
                             $maleta = Maleta::with('propietario')->find($state);
-                            $propietarioId = $maleta?->propietario_id;
-                            $propietarioNombre = $maleta?->propietario?->name ?? 'No asignado';
 
-                            $set('propietario_id', $propietarioId);
-                            $set('propietario_nombre', $propietarioNombre);
-
-                            // Deshabilitar el campo si no hay propietario
-                            if (!$propietarioId) {
-                                $set('propietario_disabled', true);
+                            if ($maleta?->propietario_id) {
+                                // Maleta con propietario
+                                $set('propietario_id', $maleta->propietario_id);
+                                $set('propietario_nombre', $maleta->propietario?->name);
                             } else {
-                                $set('propietario_disabled', false);
+                                // Maleta sin propietario
+                                $set('propietario_id', null);
+                                $set('propietario_nombre', 'No asignado');
                             }
                         } else {
+                            // Quitaron la selección
                             $set('propietario_id', null);
                             $set('propietario_nombre', null);
-                            $set('propietario_disabled', false);
                         }
                     }),
                 TextInput::make('maleta_codigo')
@@ -85,23 +83,14 @@ class ControlMaletaResource extends Resource
                     ->label('Propietario')
                     ->readOnly()
                     ->dehydrated(false)
-                    ->default('No asignado')
-                    ->disabled(fn(Get $get) => $get('propietario_disabled'))
+                    ->disabled(fn(Get $get) => blank($get('propietario_id')))
                     ->afterStateHydrated(function (TextInput $component, $state, $record) {
-                        // Cuando se carga el registro en edición, establecer el estado correcto
-                        if ($record && !$record->propietario_id) {
+                        // En edición: si no hay propietario, mostrar "No asignado"
+                        if ($record && blank($record->propietario_id)) {
                             $component->state('No asignado');
                         }
                     }),
                 Hidden::make('propietario_id'),
-                Hidden::make('propietario_disabled')
-                    ->default(false)
-                    ->afterStateHydrated(function (Set $set, $state, $record) {
-                        // Cuando se carga el registro en edición, establecer el estado disabled
-                        if ($record && !$record->propietario_id) {
-                            $set('propietario_disabled', true);
-                        }
-                    }),
             ]);
     }
 
