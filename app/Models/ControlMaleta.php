@@ -16,6 +16,7 @@ class ControlMaleta extends Model
         'fecha',
         'responsable_id',
         'propietario_id',
+        'evidencia_url',
     ];
 
     protected $casts = [

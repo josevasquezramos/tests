@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->dateTime('fecha');
             $table->unsignedBigInteger('responsable_id');
             $table->unsignedBigInteger('propietario_id')->nullable();
+            $table->string('evidencia_url')->nullable();
 
             $table->index('maleta_id', 'idx_cm_maleta');
             $table->index('responsable_id', 'idx_cm_responsable');

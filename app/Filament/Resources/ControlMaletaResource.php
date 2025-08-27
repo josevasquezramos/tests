@@ -9,6 +9,7 @@ use App\Models\ControlMaleta;
 use App\Models\Maleta;
 use Filament\Forms;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -91,6 +92,8 @@ class ControlMaletaResource extends Resource
                         }
                     }),
                 Hidden::make('propietario_id'),
+                FileUpload::make('evidencia_url')
+                    ->directory('control-maletas'),
             ]);
     }
 
