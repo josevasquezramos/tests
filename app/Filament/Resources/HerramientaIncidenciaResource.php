@@ -175,8 +175,9 @@ class HerramientaIncidenciaResource extends Resource
                     ->sortable()
                     ->searchable(isIndividual: true),
 
-                TextColumn::make('herramienta_nombre')
+                TextColumn::make('maletaDetalle.herramienta.nombre')
                     ->label('Herramienta')
+                    ->wrap()
                     ->getStateUsing(function ($record) {
                         $md = $record->maletaDetalle()
                             ->withTrashed()
@@ -186,6 +187,17 @@ class HerramientaIncidenciaResource extends Resource
                         return $md?->herramienta?->nombre
                             ?? "Detalle #{$record->maleta_detalle_id}";
                     })
+                    ->searchable(
+                        query: function (Builder $query, string $search) {
+                            $query->whereHas('maletaDetalle', function ($q) use ($search) {
+                                $q->withTrashed()
+                                    ->whereHas('herramienta', function ($q2) use ($search) {
+                                        $q2->where('nombre', 'like', "%{$search}%");
+                                    });
+                            });
+                        },
+                        isIndividual: true
+                    )
                     ->sortable(false),
 
                 TextColumn::make('motivo')

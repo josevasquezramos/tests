@@ -26,7 +26,7 @@ class EditHerramientaIncidencia extends EditRecord
         $data['propietario_nombre'] = $record->propietario?->name ?? 'No asignado';
 
         // Maleta y Herramienta para los campos readonly
-        $md = $record->maletaDetaFlle()->withTrashed()->with(['maleta', 'herramienta'])->first();
+        $md = $record->maletaDetalle()->withTrashed()->with(['maleta', 'herramienta'])->first();
 
         $data['maleta_codigo'] = $md?->maleta?->codigo ?? "Maleta #{$md?->maleta_id}";
         $data['herramienta_nombre'] = $md?->herramienta?->nombre

@@ -63,19 +63,13 @@ class ControlMaletaDetalleResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                // Filtro opcional si quieres permitir refinar aún más
                 Tables\Filters\SelectFilter::make('estado')
                     ->options([
-                        'OPERATIVO' => 'Operativo',
                         'MERMA' => 'Merma',
                         'PERDIDO' => 'Perdido',
                     ])
-                    ->default(['MERMA', 'PERDIDO']) // Filtro por defecto: Merma y Perdido
-                    ->multiple() // Permite selección múltiple
-                    ->query(function (Builder $query, array $data) {
-                        if (!empty($data['values'])) {
-                            $query->whereIn('estado', $data['values']);
-                        }
-                    }),
+                    ->multiple(),
             ])
             ->actions([
                 // Tables\Actions\EditAction::make(),
@@ -85,6 +79,13 @@ class ControlMaletaDetalleResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    // Añade este método para modificar la consulta base
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->whereIn('estado', ['MERMA', 'PERDIDO']);
     }
 
     public static function getRelations(): array
