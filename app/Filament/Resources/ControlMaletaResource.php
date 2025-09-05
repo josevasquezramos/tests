@@ -93,6 +93,7 @@ class ControlMaletaResource extends Resource
                     }),
                 Hidden::make('propietario_id'),
                 FileUpload::make('evidencia_url')
+                    ->hiddenOn('create')
                     ->directory('control-maletas'),
             ]);
     }

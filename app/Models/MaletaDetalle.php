@@ -16,6 +16,7 @@ class MaletaDetalle extends Model
         'maleta_id',
         'herramienta_id',
         'ultimo_estado',
+        'evidencia_url',
     ];
 
     protected $casts = [

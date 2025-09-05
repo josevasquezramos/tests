@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MaletaResource\RelationManagers;
 use App\Models\Herramienta;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -13,6 +14,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -56,7 +58,9 @@ class DetallesRelationManager extends RelationManager
                     ->visibleOn('create'),
                 TextInput::make('ultimo_estado')
                     ->disabled()
-                    ->hiddenOn('create')
+                    ->hiddenOn('create'),
+                FileUpload::make('evidencia_url')
+                    ->directory('maleta-detalles'),
             ]);
     }
 
@@ -67,8 +71,8 @@ class DetallesRelationManager extends RelationManager
                 TextColumn::make('herramienta.nombre')
                     ->searchable(isIndividual: true)
                     ->sortable(),
+                ImageColumn::make('evidencia_url'),
                 TextColumn::make('ultimo_estado')
-                    ->searchable(isIndividual: true)
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'OPERATIVO' => 'success',
@@ -84,6 +88,7 @@ class DetallesRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make(),
             ])
             ->actions([
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\RestoreAction::make(),

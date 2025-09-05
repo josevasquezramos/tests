@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('maleta_id');
             $table->unsignedBigInteger('herramienta_id');
             $table->enum('ultimo_estado', ['OPERATIVO', 'MERMA', 'PERDIDO'])->nullable();
+            $table->string('evidencia_url')->nullable();
 
             $table->index('maleta_id', 'idx_md_maleta');
             $table->index('herramienta_id', 'idx_md_herramienta');

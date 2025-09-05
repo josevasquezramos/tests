@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Columns\ColumnGroup;
 use Filament\Tables\Columns\TextColumn;
@@ -77,19 +78,20 @@ class HerramientaResource extends Resource
                         ->alignEnd()
                         ->prefix('S/ ')
                         ->sortable(),
-                    TextColumn::make('cantidad')
-                        ->alignEnd()
-                        ->label('Cantidad')
-                        ->numeric()
-                        ->sortable(),
                 ]),
                 ColumnGroup::make('Stock', [
+                    TextColumn::make('cantidad')
+                        ->alignEnd()
+                        ->weight(FontWeight::Bold)
+                        ->label('Total')
+                        ->numeric()
+                        ->sortable(),
                     TextColumn::make('stock')
                         ->alignEnd()
-                        ->label('En almacén')
+                        ->label('Almacén')
                         ->sortable(),
                     TextColumn::make('asignadas')
-                        ->label('En maletas')
+                        ->label('Maletas')
                         ->alignEnd()
                         ->sortable(),
                 ]),
