@@ -71,7 +71,9 @@ class DetallesRelationManager extends RelationManager
                 TextColumn::make('herramienta.nombre')
                     ->searchable(isIndividual: true)
                     ->sortable(),
-                ImageColumn::make('evidencia_url'),
+                ImageColumn::make('evidencia_url')
+                    ->width(70)
+                    ->height(70),
                 TextColumn::make('ultimo_estado')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
