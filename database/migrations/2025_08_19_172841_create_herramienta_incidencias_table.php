@@ -59,11 +59,11 @@ return new class extends Migration {
         // Laravel no soporta CHECK constraints nativamente, 
         // así que lo agregamos con SQL crudo
         DB::statement('
-            ALTER TABLE herramienta_incidencias 
-            ADD CONSTRAINT chk_hi_coherencia CHECK (
-                (tipo_origen = "MALETA" AND maleta_detalle_id IS NOT NULL AND cantidad = 1) OR
-                (tipo_origen = "STOCK" AND maleta_detalle_id IS NULL AND cantidad > 0)
-            )
+    ALTER TABLE herramienta_incidencias 
+    ADD CONSTRAINT chk_hi_coherencia CHECK (
+        (tipo_origen = "MALETA" AND cantidad = 1) OR
+        (tipo_origen = "STOCK" AND cantidad > 0)
+    )
         ');
     }
 
